@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed Quiz Master - Infinite Practice Game</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --accent-gold: #eab308;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            border: 1px solid #334155;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #334155;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #6366f1;
+        }
+
+        .subtitle-badge {
+            background: #334155;
+            color: #38bdf8;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .card {
+            background: #334155;
+            padding: 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary);
+            background: #3b4d66;
+        }
+
+        .card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 6px;
+            color: #f1f5f9;
+        }
+
+        .card p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            background: #0f172a;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+        }
+
+        .timer-container {
+            width: 100%;
+            height: 8px;
+            background: #334155;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .timer-bar {
+            height: 100%;
+            width: 100%;
+            background: var(--accent-green);
+            transition: width 0.1s linear, background-color 0.3s;
+        }
+
+        .question-box {
+            background: #0f172a;
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .q-level {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .q-en {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #f8fafc;
+            margin-bottom: 6px;
+        }
+
+        .q-hi {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #38bdf8;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        @media (min-width: 600px) {
+            .options-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .opt-btn {
+            background: #334155;
+            color: white;
+            border: 2px solid #475569;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 1rem;
+            text-align: left;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .opt-btn:hover:not([disabled]) {
+            border-color: var(--primary);
+            background: #3b4d66;
+        }
+
+        .opt-btn.correct {
+            background: var(--accent-green) !important;
+            border-color: var(--accent-green) !important;
+            color: black;
+            font-weight: bold;
+        }
+
+        .opt-btn.wrong {
+            background: var(--accent-red) !important;
+            border-color: var(--accent-red) !important;
+            color: white;
+        }
+
+        .result-card {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .score-display {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--accent-gold);
+            margin: 15px 0;
+        }
+
+        .analytics-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            text-align: left;
+        }
+
+        .analytics-table th, .analytics-table td {
+            padding: 10px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .btn-action {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn-action:hover {
+            background: var(--primary-hover);
+        }
+
+        .ad-space {
+            margin-top: 20px;
+            width: 100%;
+            height: 90px;
+            background: #0f172a;
+            border: 1px dashed #475569;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            font-size: 0.85rem;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="title">⚡ Exam Speed Master</div>
+        <div class="subtitle-badge">Bilingual & Unlimited Questions</div>
+    </div>
+
+    <!-- 1. Category Screen -->
+    <div id="screen-category" class="screen active">
+        <h2 style="margin-bottom: 8px;">Select Topic / विषय चुनें</h2>
+        <p style="color: var(--text-muted);">Questions get harder as you progress! (10 Questions Set):</p>
+        
+        <div class="grid" id="category-grid"></div>
+    </div>
+
+    <!-- 2. Quiz Screen -->
+    <div id="screen-quiz" class="screen">
+        <div class="stats-bar">
+            <div>Score: <strong id="val-score" style="color: var(--accent-gold);">0</strong></div>
+            <div>Question: <strong id="val-qnum">1/10</strong></div>
+            <div>Streak: <strong id="val-streak" style="color: var(--accent-green);">0 🔥</strong></div>
+        </div>
+
+        <div class="timer-container">
+            <div id="timer-bar" class="timer-bar"></div>
+        </div>
+
+        <div class="question-box">
+            <div class="q-level" id="q-level-tag">LEVEL 1 (EASY)</div>
+            <div class="q-en" id="q-text-en">Loading...</div>
+            <div class="q-hi" id="q-text-hi">लोड हो रहा है...</div>
+        </div>
+
+        <div class="options-grid" id="options-container"></div>
+    </div>
+
+    <!-- 3. Result Screen -->
+    <div id="screen-result" class="screen">
+        <div class="result-card">
+            <h2>Performance Result / परिणाम</h2>
+            <div class="score-display" id="final-score">0 pts</div>
+
+            <table class="analytics-table">
+                <tr>
+                    <td>Accuracy / सटीकता:</td>
+                    <td id="row-accuracy-val"><strong>0%</strong></td>
+                </tr>
+                <tr>
+                    <td>Speed Rating / स्पीड रेटिंग:</td>
+                    <td id="row-status-val"><strong>Good</strong></td>
+                </tr>
+            </table>
+
+            <button class="btn-action" onclick="showCategoryScreen()">Play Again (New Questions)</button>
+        </div>
+    </div>
+
+    <div class="ad-space" id="ad-placeholder">
+        [ Google AdSense Banner Advertisement ]
+    </div>
+</div>
+
+<script>
+    const topics = {
+        math_plus: { name: "➕ Math: Plus (जोड़)", desc: "Easy ➔ Medium ➔ Hard Addition", timeLimit: 25 },
+        math_minus: { name: "➖ Math: Minus (घटाव)", desc: "Easy ➔ Medium ➔ Hard Subtraction", timeLimit: 25 },
+        math_multiply: { name: "✖️ Math: Multiply (गुणा)", desc: "Easy ➔ Hard Multiplication", timeLimit: 25 },
+        math_divide: { name: "➗ Math: Divide (भाग)", desc: "Easy ➔ Hard Division", timeLimit: 25 },
+        profit_loss: { name: "📈 Math: Profit & Loss (लाभ-हानि)", desc: "Easy ➔ Hard Percentage & SP/CP", timeLimit: 30 }
+    };
+
+    let currentTopic = null;
+    let currentQIndex = 0;
+    let totalQuestions = 10;
+    let score = 0;
+    let streak = 0;
+    let correctAnswersCount = 0;
+    let timerInterval = null;
+    let activeQuestion = null;
+
+    // Helper: Random Integer
+    function getRandom(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // Helper: Generate Random Unique Options
+    function generateOptions(correctVal) {
+        let opts = new Set([correctVal]);
+        while(opts.size < 4) {
+            let offset = getRandom(1, 10) * (Math.random() > 0.5 ? 1 : -1);
+            let wrongVal = correctVal + offset;
+            if(wrongVal >= 0 && wrongVal !== correctVal) opts.add(wrongVal);
+        }
+        return Array.from(opts).sort(() => Math.random() - 0.5);
+    }
+
+    // Dynamic Question Generator based on Level (1 = Easy, 2 = Medium, 3 = Hard)
+    function generateQuestion(topicKey, qNum) {
+        let level = 1;
+        let levelLabel = "LEVEL 1 (SARAL / EASY)";
+        if(qNum >= 4 && qNum <= 7) { level = 2; levelLabel = "LEVEL 2 (MODERATE / मध्यम)"; }
+        if(qNum >= 8) { level = 3; levelLabel = "LEVEL 3 (HARD / कठिन)"; }
+
+        let n1, n2, correctAns, qEn, qHi;
+
+        if(topicKey === 'math_plus') {
+            if(level === 1) { n1 = getRandom(12, 50); n2 = getRandom(10, 40); }
+            else if(level === 2) { n1 = getRandom(120, 500); n2 = getRandom(100, 450); }
+            else { n1 = getRandom(850, 2500); n2 = getRandom(650, 1900); }
+
+            correctAns = n1 + n2;
+            qEn = `Calculate the sum: ${n1} + ${n2} = ?`;
+            qHi = `योग ज्ञात कीजिए: ${n1} + ${n2} = ?`;
+        } 
+        else if(topicKey === 'math_minus') {
+            if(level === 1) { n1 = getRandom(30, 99); n2 = getRandom(10, n1); }
+            else if(level === 2) { n1 = getRandom(300, 999); n2 = getRandom(100, n1); }
+            else { n1 = getRandom(1500, 5000); n2 = getRandom(800, n1); }
+
+            correctAns = n1 - n2;
+            qEn = `Subtract: ${n1} - ${n2} = ?`;
+            qHi = `घटाइए: ${n1} - ${n2} = ?`;
+        }
+        else if(topicKey === 'math_multiply') {
+            if(level === 1) { n1 = getRandom(5, 12); n2 = getRandom(6, 12); }
+            else if(level === 2) { n1 = getRandom(13, 25); n2 = getRandom(6, 15); }
+            else { n1 = getRandom(25, 65); n2 = getRandom(12, 35); }
+
+            correctAns = n1 * n2;
+            qEn = `Multiply: ${n1} × ${n2} = ?`;
+            qHi = `गुणा कीजिए: ${n1} × ${n2} = ?`;
+        }
+        else if(topicKey === 'math_divide') {
+            if(level === 1) { n2 = getRandom(2, 9); correctAns = getRandom(4, 12); n1 = n2 * correctAns; }
+            else if(level === 2) { n2 = getRandom(11, 20); correctAns = getRandom(10, 25); n1 = n2 * correctAns; }
+            else { n2 = getRandom(21, 45); correctAns = getRandom(15, 50); n1 = n2 * correctAns; }
+
+            qEn = `Divide: ${n1} ÷ ${n2} = ?`;
+            qHi = `भाग दीजिए: ${n1} ÷ ${n2} = ?`;
+        }
+        else if(topicKey === 'profit_loss') {
+            let cp = getRandom(1, 10) * (level === 1 ? 50 : (level === 2 ? 100 : 250));
+            let profit = getRandom(1, 5) * (level === 1 ? 20 : 50);
+            correctAns = cp + profit;
+
+            qEn = `A item Cost Price (CP) = ₹${cp}. Profit = ₹${profit}. Find Selling Price (SP).`;
+            qHi = `किसी वस्तु का क्रय मूल्य (CP) = ₹${cp} है तथा लाभ = ₹${profit} है। विक्रय मूल्य (SP) ज्ञात करें।`;
+        }
+
+        let opts = generateOptions(correctAns);
+        return {
+            levelTag: levelLabel,
+            q_en: qEn,
+            q_hi: qHi,
+            opts: opts.map(String),
+            a: opts.indexOf(correctAns)
+        };
+    }
+
+    function renderCategories() {
+        const grid = document.getElementById('category-grid');
+        grid.innerHTML = '';
+        Object.keys(topics).forEach(key => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.onclick = () => startQuiz(key);
+            card.innerHTML = `<h3>${topics[key].name}</h3><p>${topics[key].desc}</p>`;
+            grid.appendChild(card);
+        });
+    }
+
+    function switchScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function showCategoryScreen() {
+        clearInterval(timerInterval);
+        switchScreen('screen-category');
+    }
+
+    function startQuiz(key) {
+        currentTopic = key;
+        currentQIndex = 1;
+        score = 0;
+        streak = 0;
+        correctAnswersCount = 0;
+        switchScreen('screen-quiz');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if(currentQIndex > totalQuestions) {
+            endQuiz();
+            return;
+        }
+
+        document.getElementById('val-score').innerText = score;
+        document.getElementById('val-qnum').innerText = `${currentQIndex}/${totalQuestions}`;
+        document.getElementById('val-streak').innerText = `${streak} 🔥`;
+
+        activeQuestion = generateQuestion(currentTopic, currentQIndex);
+
+        document.getElementById('q-level-tag').innerText = activeQuestion.levelTag;
+        document.getElementById('q-text-en').innerText = activeQuestion.q_en;
+        document.getElementById('q-text-hi').innerText = activeQuestion.q_hi;
+
+        const optContainer = document.getElementById('options-container');
+        optContainer.innerHTML = '';
+
+        activeQuestion.opts.forEach((optText, index) => {
+            const btn = document.createElement('button');
+            btn.className = 'opt-btn';
+            btn.innerText = optText;
+            btn.onclick = () => handleAnswer(index, btn);
+            optContainer.appendChild(btn);
+        });
+
+        startTimer(topics[currentTopic].timeLimit);
+    }
+
+    function startTimer(seconds) {
+        clearInterval(timerInterval);
+        const totalSec = seconds;
+        const timerBar = document.getElementById('timer-bar');
+
+        timerBar.style.width = '100%';
+        timerBar.style.backgroundColor = 'var(--accent-green)';
+
+        const startTime = Date.now();
+
+        timerInterval = setInterval(() => {
+            const elapsedTime = (Date.now() - startTime) / 1000;
+            const remaining = Math.max(0, totalSec - elapsedTime);
+            const percentage = (remaining / totalSec) * 100;
+
+            timerBar.style.width = `${percentage}%`;
+
+            if (percentage < 30) {
+                timerBar.style.backgroundColor = 'var(--accent-red)';
+            } else if (percentage < 60) {
+                timerBar.style.backgroundColor = 'var(--accent-gold)';
+            }
+
+            if (remaining <= 0) {
+                clearInterval(timerInterval);
+                handleAnswer(-1, null);
+            }
+        }, 100);
+    }
+
+    function handleAnswer(selectedIndex, clickedBtn) {
+        clearInterval(timerInterval);
+        const correctIndex = activeQuestion.a;
+        const buttons = document.querySelectorAll('.opt-btn');
+
+        buttons.forEach(btn => btn.disabled = true);
+
+        if (selectedIndex === correctIndex) {
+            if(clickedBtn) clickedBtn.classList.add('correct');
+            score += 10 + (streak * 2);
+            streak++;
+            correctAnswersCount++;
+        } else {
+            if(clickedBtn) clickedBtn.classList.add('wrong');
+            if (correctIndex >= 0 && buttons[correctIndex]) {
+                buttons[correctIndex].classList.add('correct');
+            }
+            streak = 0;
+        }
+
+        setTimeout(() => {
+            currentQIndex++;
+            loadQuestion();
+        }, 1200);
+    }
+
+    function endQuiz() {
+        switchScreen('screen-result');
+        const accuracy = Math.round((correctAnswersCount / totalQuestions) * 100);
+
+        document.getElementById('final-score').innerText = `${score} pts`;
+        document.getElementById('row-accuracy-val').innerText = `${accuracy}%`;
+
+        let levelText = "👍 Good / अच्छा प्रदर्शन";
+        if(accuracy >= 80) levelText = "⚡ Super Speed / बहुत तेज़";
+        else if(accuracy < 50) levelText = "🐢 Needs Practice / अभ्यास आवश्यक";
+
+        document.getElementById('row-status-val').innerText = levelText;
+    }
+
+    renderCategories();
+</script>
+</body>
+</html>
